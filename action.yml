@@ -1,0 +1,46 @@
+---
+name: Sync to JIRA - test GH action
+description: 'Test action for jira sync new version methods'
+
+inputs:
+  cron_job:
+    description: boolean value representing id this is run as cron_job
+
+  jira_project:
+    required: true
+    description: 'The key of the JIRA project where issues will be created or updated.'
+
+  perform_action:
+    required: false
+    description: 'Manual action type'
+
+  issue_numbers:
+    description: 'Issue numbers to sync'
+
+runs:
+  using: composite
+  steps:
+    - name: Enforce required inputs [jira_project]
+      if: ${{ !inputs.jira_project }}
+      shell: bash
+      run: echo "::error title=Missing Required Input::You need to define JIRA project to sync"; exit 1
+
+    - name: Checkout action repository (tomassebestik/github-action-testing)
+      uses: actions/checkout@v4
+      with:
+        repository: tomassebestik/github-action-testing
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Run sync_to_jira.py with inputs
+      shell: bash
+      run: |
+        export PYTHONPATH=${{ github.action_path }}
+        python3 sync_jira_actions/sync_to_jira.py \
+          --cron-job="${{ inputs.cron_job }}" \
+          --jira-project="${{ inputs.jira_project }}" \
+          --perform-action="${{ inputs.perform_action }}" \
+          --issue-numbers="${{ inputs.issue_numbers }}"
