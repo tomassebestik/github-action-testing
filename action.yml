@@ -35,12 +35,22 @@ runs:
       with:
         python-version: '3.11'
 
+    - name: Install Python dependencies
+      shell: bash
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
+
     - name: Run sync_to_jira.py with inputs
       shell: bash
       run: |
-        export PYTHONPATH=${{ github.action_path }}
         python3 sync_jira_actions/sync_to_jira.py \
           --cron-job="${{ inputs.cron_job }}" \
           --jira-project="${{ inputs.jira_project }}" \
           --perform-action="${{ inputs.perform_action }}" \
           --issue-numbers="${{ inputs.issue_numbers }}"
+      env:
+        PYTHONPATH: ${{ github.action_path }}
+        GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}  # Needs to be passed from caller workflow; by ENV (secure), not by input
+        JIRA_TOKEN: ${{ env.JIRA_TOKEN }}
+        JIRA_URL: ${{ env.JIRA_URL }}
